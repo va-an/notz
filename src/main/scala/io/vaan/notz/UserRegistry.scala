@@ -3,14 +3,7 @@ package io.vaan.notz
 import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-
-final case class User(
-    name: String,
-    age: Int,
-    countryOfResidence: String
-)
-
-final case class Users(users: Seq[User])
+import io.vaan.notz.model.{User, Users}
 
 object UserRegistry {
   // actor protocol
@@ -31,14 +24,13 @@ object UserRegistry {
         replyTo ! Users(users.toSeq)
         Behaviors.same
       case CreateUser(user, replyTo) =>
-        replyTo ! ActionPerformed(s"User ${user.name} created.")
+        replyTo ! ActionPerformed(s"User ${user.firstName} created.")
         registry(users + user)
-      case GetUser(name, replyTo) =>
-        replyTo ! GetUserResponse(users.find(_.name == name))
+      case GetUser(email, replyTo) =>
+        replyTo ! GetUserResponse(users.find(_.email == email))
         Behaviors.same
-      case DeleteUser(name, replyTo) =>
-        replyTo ! ActionPerformed(s"User $name deleted.")
-        registry(users.filterNot(_.name == name))
+      case DeleteUser(email, replyTo) =>
+        replyTo ! ActionPerformed(s"User $email deleted.")
+        registry(users.filterNot(_.email == email))
     }
 }
-
