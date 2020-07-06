@@ -1,16 +1,16 @@
 package io.vaan.notz
 
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import io.vaan.notz.users.{UserRegistry, UserRoutes}
 
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 
-object QuickstartApp {
+object App {
 
   private def startHttpServer(routes: Route, system: ActorSystem[_]): Unit = {
     // Akka HTTP still needs a classic ActorSystem to start

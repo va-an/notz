@@ -1,4 +1,4 @@
-package io.vaan.notz.model
+package io.vaan.notz.users.model
 
 final case class User(
     firstName: String,

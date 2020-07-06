@@ -1,7 +1,7 @@
-package io.vaan.notz.utils
+package io.vaan.notz.users.utils
 
-import io.vaan.notz.UserRegistry.ActionPerformed
-import io.vaan.notz.model.{User, Users}
+import io.vaan.notz.users.UserRegistry.ActionPerformed
+import io.vaan.notz.users.model.{User, Users}
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonFormats  {

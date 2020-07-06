@@ -1,9 +1,8 @@
-package io.vaan.notz
+package io.vaan.notz.users
 
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import io.vaan.notz.model.{User, Users}
+import io.vaan.notz.users.model.{User, Users}
 
 object UserRegistry {
   // actor protocol
