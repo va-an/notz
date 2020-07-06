@@ -5,7 +5,6 @@ import akka.actor.typed.scaladsl.Behaviors
 import io.vaan.notz.users.model.{User, Users}
 
 object UserRegistry {
-  // actor protocol
   sealed trait Command
   final case class GetUsers(replyTo: ActorRef[Users])                           extends Command
   final case class CreateUser(user: User, replyTo: ActorRef[ActionPerformed])   extends Command

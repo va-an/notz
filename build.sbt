@@ -1,5 +1,6 @@
 lazy val akkaHttpVersion = "10.1.12"
 lazy val akkaVersion    = "2.6.6"
+lazy val slickVersion = "3.3.2"
 
 lazy val root = (project in file(".")).
   settings(
@@ -13,6 +14,9 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-http-spray-json"     % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
       "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
+
+      "com.typesafe.akka" %% "akka-persistence-typed"   % akkaVersion,
+
       "ch.qos.logback"    % "logback-classic"           % "1.2.3",
 
       "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test,
