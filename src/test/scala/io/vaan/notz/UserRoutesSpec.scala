@@ -1,12 +1,14 @@
 package io.vaan.notz
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 import akka.actor.typed.scaladsl.adapter._
+import akka.http.scaladsl.server.Route
 import io.vaan.notz.users.model.User
 import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
@@ -16,8 +18,8 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
 
   // the Akka HTTP route testkit does not yet support a typed actor system (https://github.com/akka/akka-http/issues/2036)
   // so we have to adapt for now
-  lazy val testKit = ActorTestKit()
-  implicit def typedSystem = testKit.system
+  lazy val testKit: ActorTestKit = ActorTestKit()
+  implicit def typedSystem: ActorSystem[Nothing] = testKit.system
   override def createActorSystem(): akka.actor.ActorSystem =
     testKit.system.toClassic
 
@@ -27,14 +29,12 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
   // created with testKit.createTestProbe()
   val userRepo: UserRepository = InMemoryUserRepo
 
-  val userRegistry = testKit.spawn(UserRegistry(userRepo))
-  lazy val routes = new UserRoutes(userRegistry).userRoutes
+  val userRegistry: ActorRef[UserRegistry.Command] = testKit.spawn(UserRegistry(userRepo))
+  lazy val routes: Route = new UserRoutes(userRegistry).userRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import io.vaan.notz.users.utils.JsonFormats._
-
-
 
   "UserRoutes" should {
     "return no users if no present (GET /users)" in {
@@ -52,8 +52,6 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
       }
     }
 
-
-
     "be able to add users (POST /users)" in {
       val user = User("vaan", "vy", "some@address.com")
       val userEntity = Marshal(user).to[MessageEntity].futureValue // futureValue is from ScalaFutures
@@ -68,10 +66,9 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
         contentType should ===(ContentTypes.`application/json`)
 
         // and we know what message we're expecting back:
-        entityAs[String] should ===("""{"description":"User Kapi created."}""")
+        entityAs[String] should ===("""{"description":"User vaan created."}""")
       }
     }
-
 
     "be able to remove users (DELETE /users)" in {
       // user the RequestBuilding DSL provided by ScalatestRouteSpec:
@@ -89,9 +86,6 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
     }
 
   }
-
-
-
 }
 
 
