@@ -8,27 +8,26 @@ object UserRegistry {
   sealed trait Command
   final case class GetUsers(replyTo: ActorRef[Users])                           extends Command
   final case class CreateUser(user: User, replyTo: ActorRef[ActionPerformed])   extends Command
-  final case class GetUser(name: String, replyTo: ActorRef[GetUserResponse])    extends Command
-  final case class DeleteUser(name: String, replyTo: ActorRef[ActionPerformed]) extends Command
+  final case class GetUser(email: String, replyTo: ActorRef[GetUserResponse])    extends Command
+  final case class DeleteUser(email: String, replyTo: ActorRef[ActionPerformed]) extends Command
 
   final case class GetUserResponse(maybeUser: Option[User])
   final case class ActionPerformed(description: String)
 
-  def apply(): Behavior[Command] = registry(Set.empty)
-
-  private def registry(users: Set[User]): Behavior[Command] =
-    Behaviors.receiveMessage {
-      case GetUsers(replyTo) =>
-        replyTo ! Users(users.toSeq)
-        Behaviors.same
-      case CreateUser(user, replyTo) =>
-        replyTo ! ActionPerformed(s"User ${user.firstName} created.")
-        registry(users + user)
-      case GetUser(email, replyTo) =>
-        replyTo ! GetUserResponse(users.find(_.email == email))
-        Behaviors.same
-      case DeleteUser(email, replyTo) =>
-        replyTo ! ActionPerformed(s"User $email deleted.")
-        registry(users.filterNot(_.email == email))
-    }
+  def apply(userRepository: UserRepository): Behavior[Command] = Behaviors.receiveMessage {
+    case GetUsers(replyTo) =>
+      replyTo ! userRepository.findAll
+      Behaviors.same
+    case CreateUser(user, replyTo) =>
+      replyTo ! ActionPerformed(s"User ${user.firstName} created.")
+      userRepository.create(user)
+      Behaviors.same
+    case GetUser(email, replyTo) =>
+      replyTo ! GetUserResponse(userRepository.findByEmail(email))
+      Behaviors.same
+    case DeleteUser(email, replyTo) =>
+      replyTo ! ActionPerformed(s"User $email deleted.")
+      userRepository.deleteByEmail(email)
+      Behaviors.same
+  }
 }

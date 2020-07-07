@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import io.vaan.notz.users.{UserRegistry, UserRoutes}
+import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
 import scala.util.{Failure, Success}
 
@@ -29,9 +29,10 @@ object App {
   }
 
   def main(args: Array[String]): Unit = {
+    val userRepo: UserRepository = InMemoryUserRepo
 
     val rootBehavior = Behaviors.setup[Nothing] { context =>
-      val userRegistryActor = context.spawn(UserRegistry(), "UserRegistryActor")
+      val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
       context.watch(userRegistryActor)
 
       val routes = new UserRoutes(userRegistryActor)(context.system)
@@ -40,7 +41,6 @@ object App {
       Behaviors.empty
     }
     val system = ActorSystem[Nothing](rootBehavior, "HelloAkkaHttpServer")
-
   }
 }
 

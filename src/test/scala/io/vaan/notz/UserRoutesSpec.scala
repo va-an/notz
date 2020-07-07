@@ -1,7 +1,5 @@
 package io.vaan.notz
 
-
-
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
@@ -9,7 +7,8 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 import akka.actor.typed.scaladsl.adapter._
-import io.vaan.notz.users.{UserRegistry, UserRoutes}
+import io.vaan.notz.users.model.User
+import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
 
 class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
@@ -26,7 +25,9 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
   // We use the real UserRegistryActor to test it while we hit the Routes,
   // but we could "mock" it by implementing it in-place or by using a TestProbe
   // created with testKit.createTestProbe()
-  val userRegistry = testKit.spawn(UserRegistry())
+  val userRepo: UserRepository = InMemoryUserRepo
+
+  val userRegistry = testKit.spawn(UserRegistry(userRepo))
   lazy val routes = new UserRoutes(userRegistry).userRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
@@ -54,7 +55,7 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
 
 
     "be able to add users (POST /users)" in {
-      val user = User("Kapi", 42, "jp")
+      val user = User("vaan", "vy", "some@address.com")
       val userEntity = Marshal(user).to[MessageEntity].futureValue // futureValue is from ScalaFutures
 
       // using the RequestBuilding DSL:
