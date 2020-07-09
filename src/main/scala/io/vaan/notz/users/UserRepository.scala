@@ -7,6 +7,7 @@ trait UserRepository {
   def findAll: Users
   def findByEmail(email: String): Option[User]
   def deleteByEmail(email: String): Unit
+  def update(user: User): Option[User]
 }
 
 object InMemoryUserRepo extends UserRepository {
@@ -22,4 +23,16 @@ object InMemoryUserRepo extends UserRepository {
 
   override def deleteByEmail(email: String): Unit =
     users = users.filterNot(_.email == email)
+
+  override def update(user: User): Option[User] = {
+    users
+      .find(_.email == user.email)
+      .map { x =>
+        x.copy(
+          firstName = user.firstName,
+          lastName = user.lastName
+        )
+      }
+  }
 }
+

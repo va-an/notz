@@ -34,14 +34,14 @@ object UserEntity {
 
   val commandHandler: (UserState, Command) => Effect[Event, UserState] = { (state, command) =>
     command match {
-      case ChangeFirstName(firstName) => throw new NotImplementedError
+      case ChangeFirstName(firstName) => Effect.persist(ChangedFirstName(firstName))
       case ChangeLastName(lastName) => throw new NotImplementedError
     }
   }
 
   val eventHandler: (UserState, Event) => UserState = { (state, event) =>
     event match {
-      case ChangedFirstName(firstName) => throw new NotImplementedError
+      case ChangedFirstName(firstName) => state.copy(firstName = firstName)
       case ChangedLastName(lastName) => throw new NotImplementedError
     }
   }
