@@ -8,9 +8,10 @@ import akka.http.scaladsl.server.Route
 import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
 import scala.util.{Failure, Success}
-
+import slick.jdbc.PostgresProfile.api._
 
 object App {
+  implicit val db = Database.forConfig("pgLocal")
 
   private def startHttpServer(routes: Route, system: ActorSystem[_]): Unit = {
     // Akka HTTP still needs a classic ActorSystem to start
