@@ -35,15 +35,3 @@ object InMemoryUserRepo extends UserRepository {
       }
   }
 }
-
-object PostgresUserRepo extends UserRepository {
-  override def create(user: User): Unit = ???
-
-  override def findAll: Users = ???
-
-  override def findByEmail(email: String): Option[User] = ???
-
-  override def deleteByEmail(email: String): Unit = ???
-
-  override def update(user: User): Option[User] = ???
-}

@@ -1,8 +1,7 @@
-Start db:
-```
-$ ./runDB.sh
-```
-... and then init:
-```
-$ psql -h localhost -p 5432 -U vaan -d notz -f init_db.sql
-``` 
+How to run:
+* start db - in progress
+* sbt run
+
+Check cluster info (using [httpie](https://httpie.org/)):
+
+`$ http -v :8558/cluster/member`

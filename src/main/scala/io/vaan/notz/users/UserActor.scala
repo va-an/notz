@@ -5,7 +5,7 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import io.vaan.notz.users.model.User
 
-object UserEntity {
+object UserActor {
   // commands and events
   sealed trait Command
   sealed trait Event

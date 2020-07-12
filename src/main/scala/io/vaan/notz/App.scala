@@ -5,14 +5,12 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import akka.management.scaladsl.AkkaManagement
 import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
 import scala.util.{Failure, Success}
-import slick.jdbc.PostgresProfile.api._
 
 object App {
-  implicit val db = Database.forConfig("pgLocal")
-
   private def startHttpServer(routes: Route, system: ActorSystem[_]): Unit = {
     // Akka HTTP still needs a classic ActorSystem to start
     implicit val classicSystem: akka.actor.ActorSystem = system.toClassic
@@ -41,7 +39,8 @@ object App {
 
       Behaviors.empty
     }
-    val system = ActorSystem[Nothing](rootBehavior, "HelloAkkaHttpServer")
+    val system = ActorSystem[Nothing](rootBehavior, "notz")
+    AkkaManagement(system).start()
   }
 }
 
