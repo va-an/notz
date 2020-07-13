@@ -6,7 +6,8 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.management.scaladsl.AkkaManagement
-import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
+import io.vaan.notz.users.model.User
+import io.vaan.notz.users.{InMemoryUserRepo, UserActor, UserHandler, UserRegistry, UserRepository, UserRoutes}
 
 import scala.util.{Failure, Success}
 
@@ -31,6 +32,16 @@ object App {
     val userRepo: UserRepository = InMemoryUserRepo
 
     val rootBehavior = Behaviors.setup[Nothing] { context =>
+      UserActor.initSharding(context.system)
+
+      // TODO for check storage, delete later
+      val userHandler = new UserHandler(context)
+      userHandler.update("mailbox@vaan.io", User(
+        email = "mailbox@vaan.io",
+        firstName = "vaan",
+        lastName = "vy"
+      ))
+
       val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
       context.watch(userRegistryActor)
 
