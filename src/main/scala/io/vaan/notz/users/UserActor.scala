@@ -8,14 +8,20 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import io.vaan.notz.users.model.User
 import io.vaan.notz.users.utils.JsonSerializable
+import org.slf4j.{Logger, LoggerFactory}
 
 object UserActor {
+  val log: Logger = LoggerFactory.getLogger(getClass)
+
   // commands and events
   sealed trait Command extends JsonSerializable
   sealed trait Event extends JsonSerializable
 
   final case class Update(user: User, replyTo: ActorRef[Response]) extends Command
   final case class Updated(user: User) extends Event
+
+  final case class GetUser(userEmail: String, replyTo: ActorRef[Response]) extends Command
+  final case class GotUser(user: User) extends Event
 
   final case class Response(user: User) extends JsonSerializable
 
@@ -40,6 +46,7 @@ object UserActor {
   val commandHandler: (UserState, Command) => Effect[Event, UserState] = { (state, command) =>
     command match {
       case Update(user, replyTo) =>
+        log.debug(s"Command received: Update($user)")
         Effect
           .persist(Updated(user))
           .thenReply(replyTo) { state =>
@@ -50,6 +57,19 @@ object UserActor {
                 lastName = state.lastName)
             )
           }
+      case GetUser(userEmail, replyTo) =>
+        log.debug(s"Command received: GetUser($userEmail)")
+        Effect
+          .none
+          .thenReply(replyTo) { state =>
+            Response(
+              User(
+                email = state.email,
+                firstName = state.firstName,
+                lastName = state.lastName)
+            )
+          }
+
       case _ => throw new Exception("Unknown Command for User Actor")
     }
   }
@@ -65,7 +85,7 @@ object UserActor {
   }
 
   def apply(email: String): Behavior[Command] = Behaviors.setup { context => {
-    context.system.log.debug(s"Starting User Actor $email")
+    log.debug(s"Starting User Actor $email")
     EventSourcedBehavior[Command, Event, UserState](
       persistenceId = PersistenceId.ofUniqueId(email),
       emptyState = UserState(email),
@@ -77,7 +97,7 @@ object UserActor {
   val typeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("User")
 
   def initSharding(system: ActorSystem[_]): Unit = {
-    system.log.debug(s"Initializing Sharding . . .")
+    log.debug(s"Initializing Sharding . . .")
 
     ClusterSharding(system).init(Entity(typeKey)(createBehavior = entityContext =>
       UserActor(entityContext.entityId))

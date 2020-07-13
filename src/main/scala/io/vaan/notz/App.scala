@@ -42,6 +42,8 @@ object App {
         lastName = "vy"
       ))
 
+      userHandler.read("mailbox@vaan.io")
+
       val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
       context.watch(userRegistryActor)
 
