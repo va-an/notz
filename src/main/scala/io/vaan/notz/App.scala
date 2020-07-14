@@ -1,5 +1,6 @@
 package io.vaan.notz
 
+import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter._
@@ -34,15 +35,18 @@ object App {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       UserActor.initSharding(context.system)
 
-      // TODO for check storage, delete later
-      val userHandler = new UserHandler(context)
-      userHandler.update("mailbox@vaan.io", User(
-        email = "mailbox@vaan.io",
-        firstName = "vaan",
-        lastName = "vy"
-      ))
+      // TODO move this block to tests
+      {
+        val userHandler = new UserHandler(context)
+        userHandler.createOrUpdate("mailbox@vaan.io", User(
+          email = "mailbox@vaan.io",
+          firstName = "vaan",
+          lastName = "vy"
+        ))
 
-      userHandler.read("mailbox@vaan.io")
+        userHandler.read("mailbox@vaan.io")
+        userHandler.read("unknown@address.com")
+      }
 
       val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
       context.watch(userRegistryActor)

@@ -20,10 +20,11 @@ object UserActor {
   final case class Update(user: User, replyTo: ActorRef[Response]) extends Command
   final case class Updated(user: User) extends Event
 
-  final case class GetUser(userEmail: String, replyTo: ActorRef[Response]) extends Command
+  final case class GetUser(userEmail: String, replyTo: ActorRef[GetUserResponse]) extends Command
   final case class GotUser(user: User) extends Event
 
   final case class Response(user: User) extends JsonSerializable
+  final case class GetUserResponse(maybeUser: Option[User]) extends JsonSerializable
 
   // state
   final case class UserState(
@@ -41,12 +42,14 @@ object UserActor {
     )
 
     def apply(email: String): UserState = UserState("", "", email)
+
+    val empty: UserState = UserState("", "", "")
   }
 
   val commandHandler: (UserState, Command) => Effect[Event, UserState] = { (state, command) =>
     command match {
       case Update(user, replyTo) =>
-        log.debug(s"Command received: Update($user)")
+        log.info(s"Command received: Update($user)")
         Effect
           .persist(Updated(user))
           .thenReply(replyTo) { state =>
@@ -58,16 +61,14 @@ object UserActor {
             )
           }
       case GetUser(userEmail, replyTo) =>
-        log.debug(s"Command received: GetUser($userEmail)")
+        log.info(s"Command received: GetUser($userEmail)")
         Effect
           .none
           .thenReply(replyTo) { state =>
-            Response(
-              User(
-                email = state.email,
-                firstName = state.firstName,
-                lastName = state.lastName)
-            )
+            if (state == UserState.empty)
+              GetUserResponse(None)
+            else
+              GetUserResponse(Some(User(state)))
           }
 
       case _ => throw new Exception("Unknown Command for User Actor")
@@ -81,14 +82,15 @@ object UserActor {
           firstName = user.firstName,
           lastName = user.lastName
         )
+      case GotUser(_) => state
     }
   }
 
   def apply(email: String): Behavior[Command] = Behaviors.setup { context => {
-    log.debug(s"Starting User Actor $email")
+    log.info(s"Starting User Actor $email")
     EventSourcedBehavior[Command, Event, UserState](
       persistenceId = PersistenceId.ofUniqueId(email),
-      emptyState = UserState(email),
+      emptyState = UserState.empty,
       commandHandler = commandHandler,
       eventHandler = eventHandler
     )}
@@ -97,7 +99,7 @@ object UserActor {
   val typeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("User")
 
   def initSharding(system: ActorSystem[_]): Unit = {
-    log.debug(s"Initializing Sharding . . .")
+    log.info(s"Initializing Sharding . . .")
 
     ClusterSharding(system).init(Entity(typeKey)(createBehavior = entityContext =>
       UserActor(entityContext.entityId))
