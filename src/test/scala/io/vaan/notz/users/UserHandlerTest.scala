@@ -6,6 +6,7 @@ import io.vaan.notz.users.model.User
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 
+// FIXME failed on start
 class UserHandlerTest
   extends WordSpec
     with Matchers

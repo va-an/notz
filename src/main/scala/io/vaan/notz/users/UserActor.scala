@@ -72,7 +72,7 @@ object UserActor {
         Effect
           .none
           .thenReply(replyTo) { state =>
-            if (state.isDeleted)
+            if (UserState.isEmptyOrDeleted(state))
               GetUserResponse(None)
             else
               GetUserResponse(Some(User(state)))

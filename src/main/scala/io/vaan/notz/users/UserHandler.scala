@@ -24,7 +24,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
         result.user
       }
 
-  def read(userEmail: String): Future[Option[User]] =
+  def read(userEmail: String) =
     sharding
       .entityRefFor(UserActor.typeKey, userEmail)
       .ask[GetUserResponse](UserActor.Get)
@@ -35,7 +35,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
           case None =>
             system.log.info(s"Not found user by email $userEmail")
         }
-        response.maybeUser
+        GetUserResponse(response.maybeUser)
       }
 
 //  def delete(userEmail: String) = ???

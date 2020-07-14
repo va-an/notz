@@ -13,7 +13,7 @@ import io.vaan.notz.users.utils.JsonFormats._
 
 import scala.concurrent.Future
 
-class UserRoutes(userRegistry: ActorRef[UserRegistry.Command])(implicit val system: ActorSystem[_]) {
+class UserRoutes(userRegistry: ActorRef[UserRegistry.Command], userHandler: UserHandler)(implicit val system: ActorSystem[_]) {
 
   // If ask takes more time than this to complete the request is failed
   private implicit val timeout: Timeout =
@@ -21,12 +21,16 @@ class UserRoutes(userRegistry: ActorRef[UserRegistry.Command])(implicit val syst
 
   def getUsers: Future[Users] =
     userRegistry.ask(GetUsers)
-  def getUser(name: String): Future[GetUserResponse] =
-    userRegistry.ask(GetUser(name, _))
+
+  def getUser(email: String) =
+  //    userRegistry.ask(GetUser(email, _))
+    userHandler.read(email)
+
   def createUser(user: User): Future[ActionPerformed] =
     userRegistry.ask(CreateUser(user, _))
-  def deleteUser(name: String): Future[ActionPerformed] =
-    userRegistry.ask(DeleteUser(name, _))
+
+  def deleteUser(email: String): Future[ActionPerformed] =
+    userRegistry.ask(DeleteUser(email, _))
 
   private val users = pathEnd {
     concat(
