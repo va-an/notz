@@ -16,21 +16,26 @@ object UserActor {
   // commands and events
   sealed trait Command extends JsonSerializable
   sealed trait Event extends JsonSerializable
+  sealed trait Response extends JsonSerializable
 
-  final case class Update(user: User, replyTo: ActorRef[Response]) extends Command
+  final case class Update(user: User, replyTo: ActorRef[UpdateResponse]) extends Command
   final case class Updated(user: User) extends Event
+  final case class UpdateResponse(user: User)
 
-  final case class GetUser(userEmail: String, replyTo: ActorRef[GetUserResponse]) extends Command
-  final case class GotUser(user: User) extends Event
+  final case class Get(replyTo: ActorRef[GetUserResponse]) extends Command
+  final case class Got(user: User) extends Event
+  final case class GetUserResponse(maybeUser: Option[User]) extends Response
 
-  final case class Response(user: User) extends JsonSerializable
-  final case class GetUserResponse(maybeUser: Option[User]) extends JsonSerializable
+  final case class Delete() extends Command
+  final case class Deleted() extends Event
+  final case class DeleteResponse() extends Response
 
   // state
   final case class UserState(
     firstName: String,
     lastName: String,
-    email: String
+    email: String,
+    isDeleted: Boolean
   )
 
   // empty state constructor
@@ -38,12 +43,14 @@ object UserActor {
     def apply(user: User): UserState = UserState(
       user.firstName,
       user.lastName,
-      user.email
+      user.email,
+      isDeleted = false
     )
 
-    def apply(email: String): UserState = UserState("", "", email)
+    val empty: UserState = UserState("", "", "", isDeleted = false)
 
-    val empty: UserState = UserState("", "", "")
+    def isEmptyOrDeleted(state: UserState): Boolean =
+      state == empty || state.isDeleted
   }
 
   val commandHandler: (UserState, Command) => Effect[Event, UserState] = { (state, command) =>
@@ -53,23 +60,27 @@ object UserActor {
         Effect
           .persist(Updated(user))
           .thenReply(replyTo) { state =>
-            Response(
+            UpdateResponse(
               User(
                 email = state.email,
                 firstName = state.firstName,
                 lastName = state.lastName)
             )
           }
-      case GetUser(userEmail, replyTo) =>
-        log.info(s"Command received: GetUser($userEmail)")
+      case Get(replyTo) =>
+        log.info(s"Command received: GetUser(${state.email})")
         Effect
           .none
           .thenReply(replyTo) { state =>
-            if (state == UserState.empty)
+            if (state.isDeleted)
               GetUserResponse(None)
             else
               GetUserResponse(Some(User(state)))
           }
+
+      case Delete() =>
+        log.info(s"Command received: Delete(${state.email})")
+        Effect.persist(Deleted())
 
       case _ => throw new Exception("Unknown Command for User Actor")
     }
@@ -82,7 +93,8 @@ object UserActor {
           firstName = user.firstName,
           lastName = user.lastName
         )
-      case GotUser(_) => state
+      case Got(_) => state
+      case Deleted() => state.copy(isDeleted = true)
     }
   }
 

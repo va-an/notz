@@ -1,16 +1,15 @@
-package io.vaan.notz
+package io.vaan.notz.users
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
+import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import io.vaan.notz.users.model.User
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
-import akka.actor.typed.scaladsl.adapter._
-import akka.http.scaladsl.server.Route
-import io.vaan.notz.users.model.User
-import io.vaan.notz.users.{InMemoryUserRepo, UserRegistry, UserRepository, UserRoutes}
 
 
 class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {

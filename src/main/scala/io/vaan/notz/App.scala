@@ -35,19 +35,6 @@ object App {
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       UserActor.initSharding(context.system)
 
-      // TODO move this block to tests
-      {
-        val userHandler = new UserHandler(context)
-        userHandler.createOrUpdate("mailbox@vaan.io", User(
-          email = "mailbox@vaan.io",
-          firstName = "vaan",
-          lastName = "vy"
-        ))
-
-        userHandler.read("mailbox@vaan.io")
-        userHandler.read("unknown@address.com")
-      }
-
       val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
       context.watch(userRegistryActor)
 
