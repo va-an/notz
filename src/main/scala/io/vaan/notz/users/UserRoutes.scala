@@ -22,15 +22,16 @@ class UserRoutes(userRegistry: ActorRef[UserRegistry.Command], userHandler: User
   def getUsers: Future[Users] =
     userRegistry.ask(GetUsers)
 
-  def getUser(email: String) =
+  def getUser(email: String): Future[UserActor.GetUserResponse] =
   //    userRegistry.ask(GetUser(email, _))
     userHandler.read(email)
 
   def createUser(user: User): Future[ActionPerformed] =
     userRegistry.ask(CreateUser(user, _))
 
-  def deleteUser(email: String): Future[ActionPerformed] =
-    userRegistry.ask(DeleteUser(email, _))
+  def deleteUser(email: String): Future[UserActor.DeleteResponse] =
+  //    userRegistry.ask(DeleteUser(email, _))
+    userHandler.delete(email)
 
   private val users = pathEnd {
     concat(
@@ -57,8 +58,8 @@ class UserRoutes(userRegistry: ActorRef[UserRegistry.Command], userHandler: User
 
       },
       delete {
-        onSuccess(deleteUser(email)) { performed =>
-          complete((StatusCodes.OK, performed))
+        onSuccess(deleteUser(email)) { _ =>
+          complete((StatusCodes.OK))
         }
       })
   }

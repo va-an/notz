@@ -3,7 +3,7 @@ package io.vaan.notz.users
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.util.Timeout
-import io.vaan.notz.users.UserActor.{GetUserResponse, UpdateResponse}
+import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse}
 import io.vaan.notz.users.model.User
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,6 +15,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
   implicit val askTimeout: Timeout = Timeout(5.seconds)
 
   // TODO separate to create and update
+  // TODO make an actor?
   def createOrUpdate(userEmail: String, user: User): Future[User] =
     sharding
       .entityRefFor(UserActor.typeKey, userEmail)
@@ -24,7 +25,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
         result.user
       }
 
-  def read(userEmail: String) =
+  def read(userEmail: String): Future[GetUserResponse] =
     sharding
       .entityRefFor(UserActor.typeKey, userEmail)
       .ask[GetUserResponse](UserActor.Get)
@@ -38,5 +39,12 @@ class UserHandler(system: ActorSystem[Nothing]) {
         GetUserResponse(response.maybeUser)
       }
 
-//  def delete(userEmail: String) = ???
+  def delete(userEmail: String): Future[DeleteResponse] =
+    sharding
+      .entityRefFor(UserActor.typeKey, userEmail)
+      .ask[DeleteResponse](UserActor.Delete)
+      .map { response =>
+        system.log.info(s"Deleted user by email $userEmail")
+        response
+      }
 }

@@ -26,7 +26,7 @@ object UserActor {
   final case class Got(user: User) extends Event
   final case class GetUserResponse(maybeUser: Option[User]) extends Response
 
-  final case class Delete() extends Command
+  final case class Delete(replyTo: ActorRef[DeleteResponse]) extends Command
   final case class Deleted() extends Event
   final case class DeleteResponse() extends Response
 
@@ -78,9 +78,11 @@ object UserActor {
               GetUserResponse(Some(User(state)))
           }
 
-      case Delete() =>
+      case Delete(replyTo) =>
         log.info(s"Command received: Delete(${state.email})")
-        Effect.persist(Deleted())
+        Effect
+          .persist(Deleted())
+          .thenReply(replyTo) { _ => DeleteResponse() }
 
       case _ => throw new Exception("Unknown Command for User Actor")
     }
