@@ -29,7 +29,7 @@ class UserHandlerTest
     }
 
     "read user" in {
-      val user = userHandler.read(testEmail).futureValue.get
+      val user = userHandler.get(testEmail).futureValue.maybeUser.get
       user.firstName should === ("vaan")
     }
   }

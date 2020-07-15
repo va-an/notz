@@ -54,6 +54,12 @@ object UserActor {
       state == empty || state.isDeleted
   }
 
+  // tags
+  object Tag {
+    val CREATED = "user-created"
+    val DELETED = "user-deleted"
+  }
+
   val commandHandler: (UserState, Command) => Effect[Event, UserState] = { (state, command) =>
     command match {
       case Update(user, replyTo) =>
@@ -67,7 +73,8 @@ object UserActor {
           }
       case Get(replyTo) =>
         log.info(s"Command received: GetUser(${state.email})")
-        Effect.none
+        Effect
+          .none
           .thenReply(replyTo) { state =>
             if (UserState.isEmptyOrDeleted(state))
               GetUserResponse(None)
@@ -107,10 +114,19 @@ object UserActor {
         emptyState = UserState.empty,
         commandHandler = commandHandler,
         eventHandler = eventHandler
-      )
+      ).withTagger(event => tagEvent(email, event))
     }
 
   val typeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("User")
+
+  def tagEvent(entityId: String, event: Event): Set[String] = {
+    val entityGroup = s"group-${math.abs(entityId.hashCode % 10)}" // FIXME magic number
+
+    event match {
+      case _: Updated => Set(entityGroup, Tag.CREATED)
+      case _: Deleted => Set(entityGroup, Tag.DELETED)
+    }
+  }
 
   def initSharding(system: ActorSystem[_]): Unit = {
     log.info(s"Initializing Sharding . . .")

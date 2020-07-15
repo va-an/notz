@@ -2,17 +2,26 @@ package io.vaan.notz.users
 
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.persistence.query.{NoOffset, PersistenceQuery}
+import akka.stream.Materializer
 import akka.util.Timeout
-import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse}
-import io.vaan.notz.users.model.User
+import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse, Updated}
+import io.vaan.notz.users.model.{User, Users}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class UserHandler(system: ActorSystem[Nothing]) {
-  val sharding: ClusterSharding    = ClusterSharding(system)
-  implicit val askTimeout: Timeout = Timeout(5.seconds)
+  private implicit val askTimeout: Timeout = Timeout(5.seconds)
+  private val sharding: ClusterSharding    = ClusterSharding(system)
+
+  private implicit val materializer: Materializer = Materializer(system)
+  private val readJournal: CassandraReadJournal = PersistenceQuery(system)
+    .readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
+
+  private val createdUsers = readJournal.currentEventsByTag(UserActor.Tag.CREATED, NoOffset)
 
   // TODO separate to create and update
   // TODO make an actor?
@@ -25,7 +34,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
         result.user
       }
 
-  def read(userEmail: String): Future[GetUserResponse] =
+  def get(userEmail: String): Future[GetUserResponse] =
     sharding
       .entityRefFor(UserActor.typeKey, userEmail)
       .ask[GetUserResponse](UserActor.Get)
@@ -47,4 +56,14 @@ class UserHandler(system: ActorSystem[Nothing]) {
         system.log.info(s"Deleted user by email $userEmail")
         response
       }
+
+  // FIXME if user is created and then deleted, we will get him here
+  def getAll: Future[Users] =
+    createdUsers
+      .map(_.event)
+      .collectType[Updated]
+      .map(_.user)
+      .take(Long.MaxValue)
+      .runFold(Vector.empty[User])(_ :+ _)
+      .map(xs => Users(xs))
 }

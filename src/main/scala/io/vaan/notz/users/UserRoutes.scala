@@ -20,10 +20,10 @@ class UserRoutes(userRegistry: ActorRef[UserRegistry.Command], userHandler: User
     Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
 
   def getUsers: Future[Users] =
-    userRegistry.ask(GetUsers)
+    userHandler.getAll
 
   def getUser(email: String): Future[UserActor.GetUserResponse] =
-    userHandler.read(email)
+    userHandler.get(email)
 
   def createUser(user: User): Future[User] =
     userHandler.createOrUpdate(user.email, user)
