@@ -6,14 +6,16 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import io.vaan.notz.users.model.User
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 
+import scala.concurrent.duration.DurationInt
 
 class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
 
+  implicit def default(implicit system: ActorSystem[_]): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
   // the Akka HTTP route testkit does not yet support a typed actor system (https://github.com/akka/akka-http/issues/2036)
   // so we have to adapt for now
@@ -28,8 +30,11 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
   // created with testKit.createTestProbe()
   val userRepo: UserRepository = InMemoryUserRepo
 
+  UserActor.initSharding(testKit.system)
+  val userHandler: UserHandler = new UserHandler(testKit.system)
+
   val userRegistry: ActorRef[UserRegistry.Command] = testKit.spawn(UserRegistry(userRepo))
-  lazy val routes: Route = new UserRoutes(userRegistry).userRoutes
+  lazy val routes: Route = new UserRoutes(userRegistry, userHandler).userRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
