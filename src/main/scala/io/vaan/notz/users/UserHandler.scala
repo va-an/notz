@@ -1,12 +1,14 @@
 package io.vaan.notz.users
 
+import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
-import akka.persistence.query.{NoOffset, PersistenceQuery}
+import akka.persistence.query.PersistenceQuery
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse, Updated}
+import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse}
 import io.vaan.notz.users.model.{User, Users}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,7 +23,7 @@ class UserHandler(system: ActorSystem[Nothing]) {
   private val readJournal: CassandraReadJournal = PersistenceQuery(system)
     .readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
-  private val createdUsers = readJournal.currentEventsByTag(UserActor.Tag.CREATED, NoOffset)
+  private def ids: Source[String, NotUsed] = readJournal.currentPersistenceIds
 
   // TODO separate to create and update
   // TODO make an actor?
@@ -57,13 +59,12 @@ class UserHandler(system: ActorSystem[Nothing]) {
         response
       }
 
-  // FIXME if user is created and then deleted, we will get him here
+  /** Not recommended for use in production */
   def getAll: Future[Users] =
-    createdUsers
-      .map(_.event)
-      .collectType[Updated]
-      .map(_.user)
-      .take(Long.MaxValue)
-      .runFold(Vector.empty[User])(_ :+ _)
+    ids
+    //      .filter(_.startsWith("UserEntity")) // FIXME now returns all entities, not only users
+      .mapAsync(4)(get)
+      .runWith(Sink.seq)
+      .map(_.flatMap(_.maybeUser))
       .map(xs => Users(xs))
 }

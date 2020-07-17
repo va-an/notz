@@ -73,8 +73,7 @@ object UserActor {
           }
       case Get(replyTo) =>
         log.info(s"Command received: GetUser(${state.email})")
-        Effect
-          .none
+        Effect.none
           .thenReply(replyTo) { state =>
             if (UserState.isEmptyOrDeleted(state))
               GetUserResponse(None)
@@ -108,7 +107,7 @@ object UserActor {
 
   def apply(email: String): Behavior[Command] =
     Behaviors.setup { context =>
-      log.info(s"Starting User Actor $email")
+      context.system.log.info(s"Starting User Actor $email")
       EventSourcedBehavior[Command, Event, UserState](
         persistenceId = PersistenceId.ofUniqueId(email),
         emptyState = UserState.empty,
@@ -125,6 +124,7 @@ object UserActor {
     event match {
       case _: Updated => Set(entityGroup, Tag.CREATED)
       case _: Deleted => Set(entityGroup, Tag.DELETED)
+      case _          => Set(entityGroup)
     }
   }
 
