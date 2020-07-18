@@ -7,7 +7,6 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.management.scaladsl.AkkaManagement
-import io.vaan.notz.users.model.User
 import io.vaan.notz.users.{InMemoryUserRepo, UserActor, UserHandler, UserRegistry, UserRepository, UserRoutes}
 
 import scala.util.{Failure, Success}

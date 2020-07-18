@@ -1,7 +1,5 @@
 package io.vaan.notz.users
 
-import io.vaan.notz.users.model.{ User, Users }
-
 trait UserRepository {
   def create(user: User): Unit
   def findAll: Users

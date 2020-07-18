@@ -2,7 +2,6 @@ package io.vaan.notz.users
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import io.vaan.notz.users.model.{User, Users}
 
 object UserRegistry {
   sealed trait Command

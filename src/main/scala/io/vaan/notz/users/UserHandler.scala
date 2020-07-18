@@ -9,7 +9,6 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
 import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse}
-import io.vaan.notz.users.model.{User, Users}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

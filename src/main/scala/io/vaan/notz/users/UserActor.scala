@@ -1,14 +1,13 @@
 package io.vaan.notz.users
 
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ ActorRef, ActorSystem, Behavior }
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.cluster.sharding.external.ExternalShardAllocationStrategy
-import akka.cluster.sharding.typed.scaladsl.{ ClusterSharding, Entity, EntityTypeKey }
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import akka.persistence.typed.PersistenceId
-import akka.persistence.typed.scaladsl.{ Effect, EventSourcedBehavior }
-import io.vaan.notz.users.model.User
+import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import io.vaan.notz.users.utils.JsonSerializable
-import org.slf4j.{ Logger, LoggerFactory }
+import org.slf4j.{Logger, LoggerFactory}
 
 object UserActor {
   val log: Logger = LoggerFactory.getLogger(getClass)

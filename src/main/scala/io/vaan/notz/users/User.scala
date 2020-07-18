@@ -1,4 +1,4 @@
-package io.vaan.notz.users.model
+package io.vaan.notz.users
 
 import io.vaan.notz.users.UserActor.UserState
 

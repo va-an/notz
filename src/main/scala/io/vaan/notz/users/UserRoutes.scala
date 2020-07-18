@@ -7,8 +7,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import io.vaan.notz.users.model.{User, Users}
-import io.vaan.notz.users.UserRegistry._
 import io.vaan.notz.users.utils.JsonFormats._
 
 import scala.concurrent.Future
