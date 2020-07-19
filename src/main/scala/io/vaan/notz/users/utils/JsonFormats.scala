@@ -1,7 +1,6 @@
 package io.vaan.notz.users.utils
 
 import io.vaan.notz.users.{User, Users}
-import io.vaan.notz.users.UserRegistry.ActionPerformed
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object JsonFormats  {
@@ -13,7 +12,4 @@ object JsonFormats  {
 
   implicit val usersJsonFormat: RootJsonFormat[Users] =
     jsonFormat1(Users)
-
-  implicit val actionPerformedJsonFormat: RootJsonFormat[ActionPerformed] =
-    jsonFormat1(ActionPerformed)
 }

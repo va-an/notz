@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.management.scaladsl.AkkaManagement
-import io.vaan.notz.users.{InMemoryUserRepo, UserActor, UserHandler, UserRegistry, UserRepository, UserRoutes}
+import io.vaan.notz.users.{UserActor, UserRegistry, UserRoutes}
 
 import scala.util.{Failure, Success}
 
@@ -29,17 +29,13 @@ object App {
   }
 
   def main(args: Array[String]): Unit = {
-    val userRepo: UserRepository = InMemoryUserRepo
-
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       UserActor.initSharding(context.system)
 
-      val userHandler: UserHandler = new UserHandler(context.system)
-
-      val userRegistryActor = context.spawn(UserRegistry(userRepo), "UserRegistryActor")
+      val userRegistryActor = context.spawn(UserRegistry(), "UserRegistryActor")
       context.watch(userRegistryActor)
 
-      val routes = new UserRoutes(userRegistryActor, userHandler)(context.system)
+      val routes = new UserRoutes(userRegistryActor)(context.system)
       startHttpServer(routes.userRoutes, context.system)
 
       Behaviors.empty

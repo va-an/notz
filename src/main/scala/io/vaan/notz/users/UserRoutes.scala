@@ -7,27 +7,30 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse}
+import io.vaan.notz.users.UserRegistry.{CreateUser, DeleteUser, GetUser, GetUsers}
 import io.vaan.notz.users.utils.JsonFormats._
 
 import scala.concurrent.Future
 
-class UserRoutes(userRegistry: ActorRef[UserRegistry.Command], userHandler: UserHandler)(implicit val system: ActorSystem[_]) {
+class UserRoutes(userRegistry: ActorRef[UserRegistry.Command])(implicit val system: ActorSystem[_]) {
 
   // If ask takes more time than this to complete the request is failed
   private implicit val timeout: Timeout =
     Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
 
   def getUsers: Future[Users] =
-    userHandler.getAll
+    userRegistry.ask(GetUsers).flatten
 
-  def getUser(email: String): Future[UserActor.GetUserResponse] =
-    userHandler.get(email)
+  def getUser(email: String): Future[GetUserResponse] = {
+    userRegistry.ask(GetUser(email, _)).flatten
+  }
 
   def createUser(user: User): Future[User] =
-    userHandler.createOrUpdate(user.email, user)
+    userRegistry.ask(CreateUser(user, _)).flatten
 
-  def deleteUser(email: String): Future[UserActor.DeleteResponse] =
-    userHandler.delete(email)
+  def deleteUser(email: String): Future[DeleteResponse] =
+    userRegistry.ask(DeleteUser(email, _)).flatten
 
   private val users = pathEnd {
     concat(

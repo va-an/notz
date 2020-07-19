@@ -27,13 +27,11 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
   // We use the real UserRegistryActor to test it while we hit the Routes,
   // but we could "mock" it by implementing it in-place or by using a TestProbe
   // created with testKit.createTestProbe()
-  val userRepo: UserRepository = InMemoryUserRepo
 
   UserActor.initSharding(testKit.system)
-  val userHandler: UserHandler = new UserHandler(testKit.system)
 
-  val userRegistry: ActorRef[UserRegistry.Command] = testKit.spawn(UserRegistry(userRepo))
-  lazy val routes: Route = new UserRoutes(userRegistry, userHandler).userRoutes
+  val userRegistry: ActorRef[UserRegistry.Command] = testKit.spawn(UserRegistry())
+  lazy val routes: Route = new UserRoutes(userRegistry).userRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -87,7 +85,6 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
         entityAs[String] should ===("""{"description":"User Kapi deleted."}""")
       }
     }
-
   }
 }
 
