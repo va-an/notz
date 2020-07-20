@@ -1,15 +1,15 @@
 package io.vaan.notz.users
 
 import akka.NotUsed
-import akka.actor.typed.{ ActorRef, Behavior }
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import io.vaan.notz.users.UserActor.{ DeleteResponse, GetUserResponse, UpdateResponse }
+import io.vaan.notz.users.UserActor.{DeleteResponse, GetUserResponse, UpdateResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -19,13 +19,15 @@ object UserRegistry {
   sealed trait Command
   final case class GetUsers(replyTo: ActorRef[Future[Users]])              extends Command
   final case class CreateUser(user: User, replyTo: ActorRef[Future[User]]) extends Command
-  final case class GetUser(email: String, replyTo: ActorRef[Future[GetUserResponse]]) extends Command
-  final case class DeleteUser(email: String, replyTo: ActorRef[Future[DeleteResponse]]) extends Command
+  final case class GetUser(email: String, replyTo: ActorRef[Future[GetUserResponse]])
+      extends Command
+  final case class DeleteUser(email: String, replyTo: ActorRef[Future[DeleteResponse]])
+      extends Command
 
   def apply(): Behavior[Command] =
     Behaviors.setup { context =>
-      implicit val askTimeout: Timeout = Timeout(5.seconds)
-      implicit val sharding: ClusterSharding    = ClusterSharding(context.system)
+      implicit val askTimeout: Timeout       = Timeout(5.seconds)
+      implicit val sharding: ClusterSharding = ClusterSharding(context.system)
 
       implicit val materializer: Materializer = Materializer(context.system)
       val readJournal: CassandraReadJournal = PersistenceQuery(context.system)
@@ -33,7 +35,9 @@ object UserRegistry {
 
       def ids: Source[String, NotUsed] = readJournal.currentPersistenceIds
 
-      def createOrUpdate(userEmail: String, user: User)(implicit sharding: ClusterSharding): Future[User] =
+      def createOrUpdate(userEmail: String, user: User)(implicit
+          sharding: ClusterSharding
+      ): Future[User] =
         sharding
           .entityRefFor(UserActor.typeKey, userEmail)
           .ask[UpdateResponse](UserActor.Update(user, _))

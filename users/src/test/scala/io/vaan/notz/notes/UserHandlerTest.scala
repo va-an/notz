@@ -1,7 +1,8 @@
-package io.vaan.notz.users
+package io.vaan.notz.notes
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import io.vaan.notz.users.User
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{Matchers, WordSpec}
 

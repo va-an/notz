@@ -11,7 +11,7 @@ import io.vaan.notz.users.{UserActor, UserRegistry, UserRoutes}
 
 import scala.util.{Failure, Success}
 
-object App {
+object UsersApp {
   private def startHttpServer(routes: Route, system: ActorSystem[_]): Unit = {
     // Akka HTTP still needs a classic ActorSystem to start
     implicit val classicSystem: akka.actor.ActorSystem = system.toClassic
