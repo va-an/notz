@@ -32,7 +32,7 @@ class UserRoutesSpec extends WordSpec with Matchers with ScalaFutures with Scala
   UserActor.initSharding(testKit.system)
 
   val userRegistry: ActorRef[UserRegistry.Command] = testKit.spawn(UserRegistry())
-  lazy val routes: Route = new UserRoutes(userRegistry).userRoutes
+  lazy val routes: Route = new UserRoutes(userRegistry).usersRoutes
 
   // use the json formats to marshal and unmarshall objects in the test
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._

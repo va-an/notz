@@ -63,7 +63,7 @@ class UserRoutes(userRegistry: ActorRef[UserRegistry.Command])(implicit val syst
       })
   }
 
-  val userRoutes: Route =
+  val usersRoutes: Route =
     pathPrefix("users") {
       concat(
         users,

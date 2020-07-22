@@ -9,22 +9,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-class NoteRoutes()(implicit val system: ActorSystem[_]) {
+class NotesRoutes()(implicit val system: ActorSystem[_]) {
   private implicit val timeout: Timeout =
-    Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
+    Timeout.create(system.settings.config.getDuration("notes.routes.ask-timeout"))
 
   def getNotes: Future[List[Note]] = Future(List())
 
   private val notes = pathEnd {
     concat(
-      get {
-        complete(getNotes)
-      }
+//      get {
+//        complete(getNotes)
+//      }
     )
   }
 
-  val noteRoutes: Route =
-    pathPrefix("users") {
-      notes
+  val notesRoutes: Route =
+    concat {
+      pathPrefix("users") {
+        notes
+      }
     }
 }
