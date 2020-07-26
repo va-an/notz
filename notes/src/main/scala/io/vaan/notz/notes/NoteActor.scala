@@ -36,7 +36,7 @@ object NoteActor {
       persistenceId = PersistenceId.ofUniqueId(note.title), // FIXME bad idea
       emptyState = NoteState.empty,
       commandHandler = commandHandler,
-      eventHandler = ???
+      eventHandler = eventHandler
     )
   }
 
@@ -47,6 +47,13 @@ object NoteActor {
         Effect
           .persist(Created(note))
           .thenReply(replyTo)(state => CreateResponse(Note(state)))
+      case _ => throw new Exception("Unknown Command for Note Actor")
+    }
+  }
+
+  def eventHandler: (NoteState, Event) => NoteState = { (state, event) =>
+    event match {
+      case Created(note) => state.copy(note)
     }
   }
 }
